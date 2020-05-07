@@ -1,0 +1,52 @@
+<html>
+  <body>
+    <script src="app.js"></script>
+
+    <button id="regenerate">Regenerate</button>
+
+    <div id="svg" style="padding-top: 25px; width: 100%; height: 750px; background-color: black;"></div>
+
+    <script>
+      const nodes = [{
+        id: 'R1',
+        connections: ['R3'],
+        children: [{
+          id: 'R1C1'
+        }, {
+          id: 'R1C2'
+        }, {
+          id: 'R1C2'
+        }]
+      }, {
+        id: 'R2',
+        connections: ['R1'],
+        children: [{
+          id: 'R2C1'
+        }, {
+          id: 'R2C2'
+        }, {
+          id: 'R2C2'
+        }]
+      }, {
+        id: 'R3',
+        connections: [],
+        children: [{
+          id: 'R3C1'
+        }, {
+          id: 'R3C2'
+        }, {
+          id: 'R3C2'
+        }]
+      }];
+
+      const drawSvg = () => document.getElementById('svg').appendChild(generate(nodes));
+      const redrawSvg = () => {
+        document.getElementById('svg').removeChild(document.getElementById('svg').firstChild);
+        drawSvg()
+      };
+
+      document.getElementById('regenerate').addEventListener('click', redrawSvg);
+      drawSvg()
+    </script>
+  </body>
+</html>
