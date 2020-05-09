@@ -72,7 +72,43 @@ var drawNodes = function (nodePosition) { return function (svg) { return nodePos
     .map(function (x) { return svg.appendChild(x); })
     .map(function (_) { return svg; })
     .pop(); }; };
-var generate = function (nodes) {
-    var positions = generateNodePositions(nodes);
-    return pipe(drawPaths(positions), drawNodes(positions))(svgElement(nodes));
+var appendSvg = function (svg) {
+    document.getElementById('svg').appendChild(svg);
+    return svg;
+};
+var addClickEvents = function (events, nodePositions) { return function (svg) {
+    nodePositions
+        .map(function (x) {
+        if (events.onClick) {
+            document.getElementById(x.id).addEventListener('click', function (_) { return events.onClick(x); });
+        }
+        return x;
+    });
+    return svg;
+}; };
+var addChildren = function (nodePositions) {
+    nodePositions
+        .filter(function (x) { return x.type === 'ROOT'; })
+        .map(function (x) {
+        x.children = function () { return nodePositions
+            .filter(function (y) { return y.type === 'CHILD'; })
+            .filter(function (y) { return y.connections[0] === x.id; }); };
+        return x;
+    });
+    return nodePositions;
+};
+var addParent = function (nodePositions) {
+    nodePositions
+        .filter(function (x) { return x.type === 'CHILD'; })
+        .map(function (x) {
+        x.parent = function () { return nodePositions
+            .filter(function (y) { return y.type === 'ROOT'; })
+            .find(function (y) { return y.id === x.connections[0]; }); };
+        return x;
+    });
+    return nodePositions;
+};
+var generate = function (config) {
+    var positions = pipe(addChildren, addParent)(generateNodePositions(config.nodes));
+    return pipe(drawPaths(positions), drawNodes(positions), appendSvg, addClickEvents(config.events, positions))(svgElement(config.nodes));
 };

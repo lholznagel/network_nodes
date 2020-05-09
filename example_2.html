@@ -42,7 +42,15 @@
         nodes[i].connections = connections;
       }
 
-      const drawSvg = () => document.getElementById('svg').appendChild(generate(nodes));
+      const drawSvg = () => document.getElementById('svg').appendChild(generate({
+        nodes,
+        events: {
+          onClick: (self) => {
+            const parentOrChild = self.parent ? self.parent() : self.children()
+            console.log(parentOrChild)
+          }
+        }
+      }));
       const redrawSvg = () => {
         document.getElementById('svg').removeChild(document.getElementById('svg').firstChild);
         drawSvg()

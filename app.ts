@@ -1,5 +1,16 @@
+interface IConfig {
+  events?: IEvent;
+  nodes: IRootNode[];
+}
+
+interface IEvent {
+  onClick: (self: INodePosition) => void;
+}
+
 interface INodePosition {
-  connections: string[]
+  children?: () => INodePosition[];
+  parent?: () => INodePosition;
+  connections: string[];
   cx: number;
   cy: number;
   id: string;
@@ -47,7 +58,14 @@ const svgElement = (nodes: IRootNode[]): SVGElement => pipe(
   addAttribute('preserveAspectRatio', 'xMidYMid meet')
 )(createElement('svg'));
 
-const generatePosition = (id: string, connections: string[], type: NodeType, nodes: IRootNode[], cxRandomFunction: () => number, cyRandomFunction: () => number): INodePosition => {
+const generatePosition = (
+  id: string,
+  connections: string[],
+  type: NodeType,
+  nodes: IRootNode[],
+  cxRandomFunction: () => number,
+  cyRandomFunction: () => number
+): INodePosition => {
   return {
     id,
     connections,
@@ -117,8 +135,54 @@ const drawNodes = (nodePosition: INodePosition[]) => (svg: SVGElement): SVGEleme
   .map(x => svg.appendChild(x))
   .map(_ => svg)
   .pop();
+const appendSvg = (svg: SVGElement): SVGElement => {
+  document.getElementById('svg').appendChild(svg);
+  return svg;
+};
 
-const generate = (nodes: IRootNode[]): SVGElement => {
-  const positions: INodePosition[] = generateNodePositions(nodes);
-  return pipe(drawPaths(positions), drawNodes(positions))(svgElement(nodes))
+const addClickEvents = (events: IEvent, nodePositions: INodePosition[]) => (svg: SVGElement): SVGElement => {
+  nodePositions
+    .map(x => {
+      if(events.onClick) {
+        document.getElementById(x.id).addEventListener('click', (_) => events.onClick(x));
+      }
+      return x;
+    });
+  return svg;
+}
+const addChildren = (nodePositions: INodePosition[]): INodePosition[] => {
+  nodePositions
+  .filter(x => x.type === 'ROOT')
+  .map(x => {
+    x.children = (): INodePosition[] => nodePositions
+      .filter(y => y.type === 'CHILD')
+      .filter(y => y.connections[0] === x.id);
+    return x;
+  });
+  return nodePositions;
+};
+const addParent = (nodePositions: INodePosition[]): INodePosition[] => {
+  nodePositions
+    .filter(x => x.type === 'CHILD')
+    .map(x => {
+      x.parent = (): INodePosition => nodePositions
+        .filter(y => y.type === 'ROOT')
+        .find(y => y.id === x.connections[0]);
+      return x;
+    });
+  return nodePositions;
+};
+
+const generate = (config: IConfig): SVGElement => {
+  const positions: INodePosition[] = pipe(
+    addChildren,
+    addParent,
+  )(generateNodePositions(config.nodes));
+
+  return pipe(
+      drawPaths(positions),
+      drawNodes(positions),
+      appendSvg,
+      addClickEvents(config.events, positions)
+    )(svgElement(config.nodes))
 };
