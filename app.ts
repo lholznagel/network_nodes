@@ -10,6 +10,7 @@ interface IEvent {
 interface INodePosition {
   children?: () => INodePosition[];
   parent?: () => INodePosition;
+  additionalData: any;
   connections: string[];
   cx: number;
   cy: number;
@@ -21,10 +22,12 @@ interface IRootNode {
   id: string;
   connections: string[];
   children: IChildNode[];
+  additionalData: any;
 }
 
 interface IChildNode {
   id: string;
+  additionalData: any;
 }
 
 type NodeType = 'ROOT' | 'CHILD';
@@ -63,6 +66,7 @@ const generatePosition = (
   connections: string[],
   type: NodeType,
   nodes: IRootNode[],
+  additionalData: any,
   cxRandomFunction: () => number,
   cyRandomFunction: () => number
 ): INodePosition => {
@@ -70,6 +74,7 @@ const generatePosition = (
     id,
     connections,
     type,
+    additionalData,
     cx: compose(offsetNodeFromBorder(OFFSET_TO_BORDER, calcViewBox(nodes.length)))(cxRandomFunction()),
     cy: compose(offsetNodeFromBorder(OFFSET_TO_BORDER, calcViewBox(nodes.length)))(cyRandomFunction())
   }
@@ -81,6 +86,7 @@ const generateRootNodePosition = (nodes: IRootNode[]): INodePosition[] => nodes
     x.connections,
     'ROOT',
     nodes,
+    x.additionalData,
     randomNumber(calcViewBox(nodes.length)),
     randomNumber(calcViewBox(nodes.length))
   ));
@@ -92,6 +98,7 @@ const generateChildNodesPosition = (nodes: IRootNode[], rootNodePositions: INode
         [x.id],
         'CHILD',
         nodes,
+        y.additionalData,
         randomNumberBetween(getRootNodePosition(x.id, rootNodePositions).cx - 20, getRootNodePosition(x.id, rootNodePositions).cx + 20),
         randomNumberBetween(getRootNodePosition(x.id, rootNodePositions).cy - 20, getRootNodePosition(x.id, rootNodePositions).cy + 20))
     ))

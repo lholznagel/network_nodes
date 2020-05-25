@@ -28,21 +28,22 @@ var offsetNodeFromBorder = function (nodeBorderOffset, max) { return function (x
         ? x += 2 * nodeBorderOffset
         : x; }; };
 var svgElement = function (nodes) { return pipe(addAttribute('viewBox', "0,0," + calcViewBox(nodes.length) + "," + calcViewBox(nodes.length)), addAttribute('style', "height: 100%; width: 100%;"), addAttribute('preserveAspectRatio', 'xMidYMid meet'))(createElement('svg')); };
-var generatePosition = function (id, connections, type, nodes, cxRandomFunction, cyRandomFunction) {
+var generatePosition = function (id, connections, type, nodes, additionalData, cxRandomFunction, cyRandomFunction) {
     return {
         id: id,
         connections: connections,
         type: type,
+        additionalData: additionalData,
         cx: compose(offsetNodeFromBorder(OFFSET_TO_BORDER, calcViewBox(nodes.length)))(cxRandomFunction()),
         cy: compose(offsetNodeFromBorder(OFFSET_TO_BORDER, calcViewBox(nodes.length)))(cyRandomFunction())
     };
 };
 var getRootNodePosition = function (id, rootNodePositions) { return rootNodePositions.find(function (x) { return x.id === id; }); };
 var generateRootNodePosition = function (nodes) { return nodes
-    .map(function (x) { return generatePosition(x.id, x.connections, 'ROOT', nodes, randomNumber(calcViewBox(nodes.length)), randomNumber(calcViewBox(nodes.length))); }); };
+    .map(function (x) { return generatePosition(x.id, x.connections, 'ROOT', nodes, x.additionalData, randomNumber(calcViewBox(nodes.length)), randomNumber(calcViewBox(nodes.length))); }); };
 var generateChildNodesPosition = function (nodes, rootNodePositions) { return nodes
     .map(function (x) { return x.children
-    .map(function (y) { return generatePosition(y.id, [x.id], 'CHILD', nodes, randomNumberBetween(getRootNodePosition(x.id, rootNodePositions).cx - 20, getRootNodePosition(x.id, rootNodePositions).cx + 20), randomNumberBetween(getRootNodePosition(x.id, rootNodePositions).cy - 20, getRootNodePosition(x.id, rootNodePositions).cy + 20)); }); })
+    .map(function (y) { return generatePosition(y.id, [x.id], 'CHILD', nodes, y.additionalData, randomNumberBetween(getRootNodePosition(x.id, rootNodePositions).cx - 20, getRootNodePosition(x.id, rootNodePositions).cx + 20), randomNumberBetween(getRootNodePosition(x.id, rootNodePositions).cy - 20, getRootNodePosition(x.id, rootNodePositions).cy + 20)); }); })
     .reduce(function (a, b) { return a.concat(b); }); };
 var getNodePosition = function (id, nodes) { return nodes.find(function (x) { return x.id == id; }); };
 var generateNodePositions = function (nodes) {
